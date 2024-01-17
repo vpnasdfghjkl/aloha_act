@@ -10,10 +10,31 @@ from ee_sim_env import make_ee_sim_env
 from sim_env import make_sim_env, BOX_POSE
 from scripted_policy import PickAndTransferPolicy, InsertionPolicy
 
+from datetime import datetime
+
+
+
+
 import IPython
 e = IPython.embed
 
 
+
+
+def Log(*args):
+    current_dir = os.path.dirname(os.path.abspath(__file__))  
+    log_file_path = os.path.join(current_dir, "Log.txt")  
+    with open(log_file_path, "a") as f:
+        info = ''.join(map(str, args))
+        print(info)
+        current_time = get_current_time()
+        str_for_write = "Current_time:" + str(current_time) + "\n" + info
+        f.write(str_for_write)
+        f.write("\n")
+    def get_current_time():
+        current_time = datetime.now()
+        formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+        return formatted_time
 def main(args):
     """
     Generate demonstration data in simulation.
@@ -57,13 +78,17 @@ def main(args):
             plt_img = ax.imshow(ts.observation['images'][render_cam_name])
             plt.ion()
         for step in range(episode_len):
-            action = policy(ts)
-            ts = env.step(action)
+            action = policy(ts) 
+            ts = env.step(action) 
+            Log("ts.observation['qpos']",ts.observation['qpos'])
+            Log("ts.observation['qpos']",ts.observation['qpos'])
             episode.append(ts)
             if onscreen_render:
                 plt_img.set_data(ts.observation['images'][render_cam_name])
                 plt.pause(0.002)
+            break
         plt.close()
+        print("len(episode)",len(episode))
 
         episode_return = np.sum([ts.reward for ts in episode[1:]])
         episode_max_reward = np.max([ts.reward for ts in episode[1:]])
@@ -73,8 +98,11 @@ def main(args):
             print(f"{episode_idx=} Failed")
 
         joint_traj = [ts.observation['qpos'] for ts in episode]
+        # print("joint_traj+++++++++++++++")
+        # print(joint_traj)
         # replace gripper pose with gripper control
         gripper_ctrl_traj = [ts.observation['gripper_ctrl'] for ts in episode]
+
         for joint, ctrl in zip(joint_traj, gripper_ctrl_traj):
             left_ctrl = PUPPET_GRIPPER_POSITION_NORMALIZE_FN(ctrl[0])
             right_ctrl = PUPPET_GRIPPER_POSITION_NORMALIZE_FN(ctrl[2])
@@ -82,6 +110,7 @@ def main(args):
             joint[6+7] = right_ctrl
 
         subtask_info = episode[0].observation['env_state'].copy() # box pose at step 0
+        ############################################
 
         # clear unused variables
         del env
@@ -102,12 +131,14 @@ def main(args):
             plt.ion()
         for t in range(len(joint_traj)): # note: this will increase episode length by 1
             action = joint_traj[t]
-            ts = env.step(action)
+            Log(action)
+            ts = env.step(action) ######################################
+            Log("ts2.observation['qpos']",ts.observation['qpos'])
             episode_replay.append(ts)
             if onscreen_render:
                 plt_img.set_data(ts.observation['images'][render_cam_name])
                 plt.pause(0.02)
-
+            
         episode_return = np.sum([ts.reward for ts in episode_replay[1:]])
         episode_max_reward = np.max([ts.reward for ts in episode_replay[1:]])
         if episode_max_reward == env.task.max_reward:
@@ -180,9 +211,12 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--task_name', action='store', type=str, help='task_name', required=True)
-    parser.add_argument('--dataset_dir', action='store', type=str, help='dataset saving dir', required=True)
-    parser.add_argument('--num_episodes', action='store', type=int, help='num_episodes', required=False)
+    # parser.add_argument('--task_name', action='store', type=str, help='task_name', required=True)
+    parser.add_argument('--task_name', type=str, default='sim_transfer_cube_scripted', help='task_name')
+
+    # parser.add_argument('--dataset_dir', action='store', type=str, help='dataset saving dir', required=True)
+    parser.add_argument('--dataset_dir', action='store', type=str, default='data',help='dataset saving dir')
+    parser.add_argument('--num_episodes', default=50,type=int, help='num_episodes')
     parser.add_argument('--onscreen_render', action='store_true')
     
     main(vars(parser.parse_args()))
