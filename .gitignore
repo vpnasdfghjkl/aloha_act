@@ -3,6 +3,10 @@ logs
 wandb
 outputs
 data
+data2/
+data3/
+cam
+ckpt_dir
 data_local
 .vscode
 _wandb

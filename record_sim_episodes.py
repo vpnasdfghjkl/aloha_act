@@ -19,9 +19,14 @@ import IPython
 e = IPython.embed
 
 
-
+# python3 record_sim_episodes.py --task_name sim_transfer_cube_scripted --dataset_dir data2 --num_episodes 10 --onscreen_render >> a.txt
+# git add . ;git commit -m "Modify record_sim_episodes.py";git push origin main ;
 
 def Log(*args):
+    def get_current_time():
+        current_time = datetime.now()
+        formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+        return formatted_time
     current_dir = os.path.dirname(os.path.abspath(__file__))  
     log_file_path = os.path.join(current_dir, "Log.txt")  
     with open(log_file_path, "a") as f:
@@ -31,10 +36,7 @@ def Log(*args):
         str_for_write = "Current_time:" + str(current_time) + "\n" + info
         f.write(str_for_write)
         f.write("\n")
-    def get_current_time():
-        current_time = datetime.now()
-        formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-        return formatted_time
+
 def main(args):
     """
     Generate demonstration data in simulation.
@@ -62,7 +64,8 @@ def main(args):
         policy_cls = InsertionPolicy
     else:
         raise NotImplementedError
-
+    neg_cnt=0
+    neg_cnt2=0
     success = []
     for episode_idx in range(num_episodes):
         print(f'{episode_idx=}')
@@ -80,16 +83,15 @@ def main(args):
         for step in range(episode_len):
             action = policy(ts) 
             ts = env.step(action) 
-            Log("ts.observation['qpos']",ts.observation['qpos'])
-            Log("ts.observation['qpos']",ts.observation['qpos'])
+            Log("ee_ts.observation['qpos']\n",ts.observation['qpos'])
+            Log("ee_ts.observation['gripper_ctrl']\n",ts.observation['gripper_ctrl'])
             episode.append(ts)
             if onscreen_render:
                 plt_img.set_data(ts.observation['images'][render_cam_name])
                 plt.pause(0.002)
-            break
-        plt.close()
-        print("len(episode)",len(episode))
 
+        plt.close()
+        Log("len(episode)",len(episode))
         episode_return = np.sum([ts.reward for ts in episode[1:]])
         episode_max_reward = np.max([ts.reward for ts in episode[1:]])
         if episode_max_reward == env.task.max_reward:
@@ -98,8 +100,8 @@ def main(args):
             print(f"{episode_idx=} Failed")
 
         joint_traj = [ts.observation['qpos'] for ts in episode]
-        # print("joint_traj+++++++++++++++")
-        # print(joint_traj)
+        Log("len(joint_traj)",len(joint_traj))
+        
         # replace gripper pose with gripper control
         gripper_ctrl_traj = [ts.observation['gripper_ctrl'] for ts in episode]
 
@@ -110,18 +112,33 @@ def main(args):
             joint[6+7] = right_ctrl
 
         subtask_info = episode[0].observation['env_state'].copy() # box pose at step 0
-        ############################################
 
+
+
+
+      
         # clear unused variables
         del env
         del episode
         del policy
-
+        Log("#######################################################################################3")
         # setup the environment
         print('Replaying joint commands')
         env = make_sim_env(task_name)
         BOX_POSE[0] = subtask_info # make sure the sim_env has the same object configurations as ee_sim_env
         ts = env.reset()
+
+
+        ##Add by hx
+        from PIL import Image
+        current_dir = os.path.dirname(os.path.abspath(__file__))  
+        cam_folder = os.path.join(current_dir, "cam")  
+        if not os.path.exists("cam"):
+            os.makedirs(cam_folder)
+        def save_cam(image_data,i):
+            image = Image.fromarray(image_data)
+            filename = os.path.join(cam_folder, f"image_{i}.png")
+            image.save(filename)
 
         episode_replay = [ts]
         # setup plotting
@@ -132,13 +149,17 @@ def main(args):
         for t in range(len(joint_traj)): # note: this will increase episode length by 1
             action = joint_traj[t]
             Log(action)
-            ts = env.step(action) ######################################
-            Log("ts2.observation['qpos']",ts.observation['qpos'])
+            ts = env.step(action) 
+         
+            Log("ts2.observation['qpos']\n",ts.observation['qpos'])
+            Log("ts2.observation['qvel']\n",ts.observation['qvel'])
+            save_cam(ts.observation['images'][render_cam_name],t)
+ 
             episode_replay.append(ts)
             if onscreen_render:
                 plt_img.set_data(ts.observation['images'][render_cam_name])
                 plt.pause(0.02)
-            
+ 
         episode_return = np.sum([ts.reward for ts in episode_replay[1:]])
         episode_max_reward = np.max([ts.reward for ts in episode_replay[1:]])
         if episode_max_reward == env.task.max_reward:
@@ -166,6 +187,7 @@ def main(args):
             '/observations/qvel': [],
             '/action': [],
         }
+
         for cam_name in camera_names:
             data_dict[f'/observations/images/{cam_name}'] = []
 
