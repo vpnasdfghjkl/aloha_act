@@ -91,13 +91,12 @@ class PickAndTransferPolicy(BasePolicy):
         #     {"t": 400, "xyz": meet_xyz + np.array([-0.1, 0, -0.02]), "quat": np.array([1, 0, 0, 0]), "gripper": 0},  # stay
         # ]
         self.left_trajectory = [
-            {"t": 0, "xyz": init_mocap_pose_left[:3], "quat": init_mocap_pose_left[3:], "gripper": 0},   # sleep
-            {"t": 100, "xyz": init_mocap_pose_left[:3], "quat": init_mocap_pose_left[3:], "gripper": 0}, # sleep
-            {"t": 260, "xyz": init_mocap_pose_left[:3], "quat": init_mocap_pose_left[3:], "gripper": 0}, # sleep
-            {"t": 310, "xyz": init_mocap_pose_left[:3], "quat": init_mocap_pose_left[3:], "gripper": 0}, # sleep
-            {"t": 360, "xyz": init_mocap_pose_left[:3], "quat": init_mocap_pose_left[3:], "gripper": 0}, # sleep
-            {"t": 400, "xyz": init_mocap_pose_left[:3], "quat": init_mocap_pose_left[3:], "gripper": 0}, # sleep
-        
+            {"t": 0, "xyz":   np.array([0, -0.96, 1.16]), "quat": np.array([0, -0.3, 0, 0.02239]), "gripper": 0},   # sleep
+            {"t": 100, "xyz": np.array([0, -0.96, 1.16]), "quat": np.array([0, -0.3, 0, 0.02239]), "gripper": 0},   # sleep
+            {"t": 260, "xyz": np.array([0, -0.96, 1.16]), "quat": np.array([0, -0.3, 0, 0.02239]), "gripper": 0},   # sleep
+            {"t": 310, "xyz": np.array([0, -0.96, 1.16]), "quat": np.array([0, -0.3, 0, 0.02239]), "gripper": 0},   # sleep
+            {"t": 360, "xyz": np.array([0, -0.96, 1.16]), "quat": np.array([0, -0.3, 0, 0.02239]), "gripper": 0},   # sleep
+            {"t": 400, "xyz": np.array([0, -0.96, 1.16]), "quat": np.array([0, -0.3, 0, 0.02239]), "gripper": 0},   # sleep
         ]
         self.right_trajectory = [
             {"t": 0,   "xyz": init_mocap_pose_right[:3], "quat": init_mocap_pose_right[3:], "gripper": 0}, # sleep

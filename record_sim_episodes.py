@@ -21,7 +21,6 @@ e = IPython.embed
 
 # python3 record_sim_episodes.py --task_name sim_transfer_cube_scripted --dataset_dir data2 --num_episodes 10 --onscreen_render >> a.txt
 # git add . ;git commit -m "Modify record_sim_episodes.py";git push origin main ;
-
 def Log(*args):
     def get_current_time():
         current_time = datetime.now()
@@ -92,7 +91,7 @@ def main(args):
         for step in range(episode_len):
             action = policy(ts) 
             ts = env.step(action) 
-            Log("ee_ts.observation['qpos']\n",ts.observation['qpos'])
+            # Log("ee_ts.observation['qpos']\n",ts.observation['qpos'])
             # Log("ee_ts.observation['gripper_ctrl']\n",ts.observation['gripper_ctrl'])
             episode.append(ts)
             if onscreen_render:
@@ -110,7 +109,7 @@ def main(args):
             print(f"{episode_idx=} Failed")
 
         joint_traj = [ts.observation['qpos'] for ts in episode]
-        # joint_traj=[joint_traj[]]
+
         Log("len(joint_traj)",len(joint_traj))
         
         # replace gripper pose with gripper control
@@ -164,8 +163,8 @@ def main(args):
             Log(action)
             ts = env.step(action) 
          
-            Log("ts2.observation['qpos']\n",ts.observation['qpos'])
-            Log("ts2.observation['qvel']\n",ts.observation['qvel'])
+            # Log("ts2.observation['qpos']\n",ts.observation['qpos'])
+            # Log("ts2.observation['qvel']\n",ts.observation['qvel'])
             save_cam(ts.observation['images'][render_cam_name],t)
  
             episode_replay.append(ts)
@@ -206,6 +205,10 @@ def main(args):
 
         # because the replaying, there will be eps_len + 1 actions and eps_len + 2 timesteps
         # truncate here to be consistent
+            
+        ### MODIFY
+        joint_traj=[jt[7:14] for jt in joint_traj]
+
         joint_traj = joint_traj[:-1]
         episode_replay = episode_replay[:-1]
 
@@ -216,8 +219,11 @@ def main(args):
         while joint_traj:
             action = joint_traj.pop(0)
             ts = episode_replay.pop(0)
-            data_dict['/observations/qpos'].append(ts.observation['qpos'])
-            data_dict['/observations/qvel'].append(ts.observation['qvel'])
+            ### MODIFY
+            # data_dict['/observations/qpos'].append(ts.observation['qpos'])
+            # data_dict['/observations/qvel'].append(ts.observation['qvel'])
+            data_dict['/observations/qpos'].append(ts.observation['qpos'][7:14])
+            data_dict['/observations/qvel'].append(ts.observation['qvel'][7:14])
             data_dict['/action'].append(action)
             for cam_name in camera_names:
                 data_dict[f'/observations/images/{cam_name}'].append(ts.observation['images'][cam_name])
@@ -235,9 +241,15 @@ def main(args):
                                          chunks=(1, 480, 640, 3), )
             # compression='gzip',compression_opts=2,)
             # compression=32001, compression_opts=(0, 0, 0, 0, 9, 1, 1), shuffle=False)
-            qpos = obs.create_dataset('qpos', (max_timesteps, 14))
-            qvel = obs.create_dataset('qvel', (max_timesteps, 14))
-            action = root.create_dataset('action', (max_timesteps, 14))
+            ### MODIFY
+            # qpos = obs.create_dataset('qpos', (max_timesteps, 14))
+            # qvel = obs.create_dataset('qvel', (max_timesteps, 14))
+            qpos = obs.create_dataset('qpos', (max_timesteps, 7))
+            qvel = obs.create_dataset('qvel', (max_timesteps, 7))
+
+            ### MODIFY
+            # action = root.create_dataset('action', (max_timesteps, 14))
+            action = root.create_dataset('action', (max_timesteps, 7))
 
             for name, array in data_dict.items():
                 root[name][...] = array

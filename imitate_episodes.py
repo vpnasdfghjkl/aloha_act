@@ -23,6 +23,8 @@ e = IPython.embed
 
 
 # python3 imitate_episodes.py --task_name sim_transfer_cube_scripted --ckpt_dir ckpt_dir --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 2000  --lr 1e-5 --seed 0
+# python3 imitate_episodes.py --task_name sim_transfer_cube_scripted --ckpt_dir /media/smj/新加卷1/dataset/ckpt_dir_only_right/ --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 100  --lr 1e-5 --seed 0
+#  python3 imitate_episodes.py --task_name sim_transfer_cube_scripted --ckpt_dir /media/smj/新加卷1/dataset/ckpt_dir_7dim/ --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 100  --lr 1e-5 --seed 0 --eval --temporal_agg --onscreen_render
 def main(args):
     set_seed(1)
     # command line parameters
@@ -49,7 +51,9 @@ def main(args):
     camera_names = task_config['camera_names']
 
     # fixed parameters
-    state_dim = 14
+    ### MODIFY
+    # state_dim = 14
+    state_dim = 7
     lr_backbone = 1e-5
     backbone = 'resnet18'
     if policy_class == 'ACT':
@@ -177,6 +181,13 @@ def eval_bc(config, ckpt_name, save_episode=True):
     with open(stats_path, 'rb') as f:
         stats = pickle.load(f)
 
+    ### MODIFY 
+    stats['qpos_mean'] = np.concatenate((np.array([0, -0.96, 1.16, 0, -0.3, 0, 0.02239]),stats['qpos_mean']))
+    stats['qpos_std'] = np.concatenate((np.array([0.001, 0.001, 0.001,0.001,0.001,0.001,0.001]),stats['qpos_std']))
+    stats['action_mean'] = np.concatenate((np.array([0, -0.96, 1.16, 0, -0.3, 0, 0.02239]),stats['action_mean'] ))
+    stats['action_std'] = np.concatenate((np.zeros(7),stats['action_std'],))
+    ### DEL ABOVE
+
     pre_process = lambda s_qpos: (s_qpos - stats['qpos_mean']) / stats['qpos_std']
     post_process = lambda a: a * stats['action_std'] + stats['action_mean']
 
@@ -220,8 +231,9 @@ def eval_bc(config, ckpt_name, save_episode=True):
         ### evaluation loop
         if temporal_agg:
             all_time_actions = torch.zeros([max_timesteps, max_timesteps+num_queries, state_dim]).cuda()
-
-        qpos_history = torch.zeros((1, max_timesteps, state_dim)).cuda()
+        ### MODIFY
+        # qpos_history = torch.zeros((1, max_timesteps, state_dim)).cuda()
+        qpos_history = torch.zeros((1, max_timesteps, 14)).cuda()
         image_list = [] # for visualization
         qpos_list = []
         target_qpos_list = []
@@ -240,16 +252,28 @@ def eval_bc(config, ckpt_name, save_episode=True):
                     image_list.append(obs['images'])
                 else:
                     image_list.append({'main': obs['image']})
+                ### MODIFY    
                 qpos_numpy = np.array(obs['qpos'])
+                # qpos_numpy = np.array(obs['qpos'])[0:7]
+                print("qpos_numpy##",qpos_numpy)
+
+                
                 qpos = pre_process(qpos_numpy)
+
                 qpos = torch.from_numpy(qpos).float().cuda().unsqueeze(0)
+                
                 qpos_history[:, t] = qpos
                 curr_image = get_image(ts, camera_names)
 
                 ### query policy
                 if config['policy_class'] == "ACT":
                     if t % query_frequency == 0:
-                        all_actions = policy(qpos, curr_image)
+                        ### MODIFY 
+                        print(qpos.shape)
+                        # all_actions = policy(qpos, curr_image)
+                        all_actions = policy(qpos[:, 7:14], curr_image)
+                        print("all_actions.shape",all_actions.shape)
+                        
                     if temporal_agg:
                         all_time_actions[[t], t:t+num_queries] = all_actions
                         actions_for_curr_step = all_time_actions[:, t]
@@ -269,6 +293,11 @@ def eval_bc(config, ckpt_name, save_episode=True):
 
                 ### post-process actions
                 raw_action = raw_action.squeeze(0).cpu().numpy()
+
+         
+                ### MODIFY
+                raw_action=np.concatenate((np.array([0, -0.96, 1.16, 0, -0.3, 0, 0.02239]),raw_action ))
+
                 action = post_process(raw_action)
                 target_qpos = action
 
