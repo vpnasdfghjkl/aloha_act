@@ -51,7 +51,8 @@ def main(args):
     num_episodes = args['num_episodes']
     onscreen_render = args['onscreen_render']
     inject_noise = False
-    render_cam_name = 'angle'
+    render_cam_name_angle = 'angle'
+    render_cam_name = 'top'
 
     if not os.path.isdir(dataset_dir):
         os.makedirs(dataset_dir, exist_ok=True)
@@ -59,6 +60,7 @@ def main(args):
     episode_len = SIM_TASK_CONFIGS[task_name]['episode_len']
     camera_names = SIM_TASK_CONFIGS[task_name]['camera_names']
     if task_name == 'sim_transfer_cube_scripted':
+        # ATTENTION_HERE
         policy_cls = PickAndTransferPolicy
     elif task_name == 'sim_insertion_scripted':
         policy_cls = InsertionPolicy
@@ -71,23 +73,31 @@ def main(args):
         print(f'{episode_idx=}')
         print('Rollout out EE space scripted policy')
         # setup the environment
+        # ATTENTION_HERE
         env = make_ee_sim_env(task_name)
         ts = env.reset()
         episode = [ts]
         policy = policy_cls(inject_noise)
         # setup plotting
         if onscreen_render:
-            ax = plt.subplot()
-            plt_img = ax.imshow(ts.observation['images'][render_cam_name])
+            # ax = plt.subplot()
+            # plt_img = ax.imshow(ts.observation['images'][render_cam_name])
+            # plt.ion()
+            # print("s")
+            fig, (ax1, ax2) = plt.subplots(1, 2)
+            plt_img = ax1.imshow(ts.observation['images'][render_cam_name])
+            plt_img2 = ax2.imshow(ts.observation['images'][render_cam_name_angle])
             plt.ion()
+
         for step in range(episode_len):
             action = policy(ts) 
             ts = env.step(action) 
             Log("ee_ts.observation['qpos']\n",ts.observation['qpos'])
-            Log("ee_ts.observation['gripper_ctrl']\n",ts.observation['gripper_ctrl'])
+            # Log("ee_ts.observation['gripper_ctrl']\n",ts.observation['gripper_ctrl'])
             episode.append(ts)
             if onscreen_render:
                 plt_img.set_data(ts.observation['images'][render_cam_name])
+                plt_img2.set_data(ts.observation['images'][render_cam_name_angle])
                 plt.pause(0.002)
 
         plt.close()
@@ -100,6 +110,7 @@ def main(args):
             print(f"{episode_idx=} Failed")
 
         joint_traj = [ts.observation['qpos'] for ts in episode]
+        # joint_traj=[joint_traj[]]
         Log("len(joint_traj)",len(joint_traj))
         
         # replace gripper pose with gripper control
@@ -124,6 +135,7 @@ def main(args):
         Log("#######################################################################################3")
         # setup the environment
         print('Replaying joint commands')
+        # ATTENTION_HERE
         env = make_sim_env(task_name)
         BOX_POSE[0] = subtask_info # make sure the sim_env has the same object configurations as ee_sim_env
         ts = env.reset()
@@ -147,6 +159,7 @@ def main(args):
             plt_img = ax.imshow(ts.observation['images'][render_cam_name])
             plt.ion()
         for t in range(len(joint_traj)): # note: this will increase episode length by 1
+            # ATTENTION_HERE
             action = joint_traj[t]
             Log(action)
             ts = env.step(action) 
@@ -199,6 +212,7 @@ def main(args):
         # len(joint_traj) i.e. actions: max_timesteps
         # len(episode_replay) i.e. time steps: max_timesteps + 1
         max_timesteps = len(joint_traj)
+        # ATTENTION_HERE
         while joint_traj:
             action = joint_traj.pop(0)
             ts = episode_replay.pop(0)
@@ -208,6 +222,7 @@ def main(args):
             for cam_name in camera_names:
                 data_dict[f'/observations/images/{cam_name}'].append(ts.observation['images'][cam_name])
 
+        # ATTENTION_HERE
         # HDF5
         t0 = time.time()
         dataset_path = os.path.join(dataset_dir, f'episode_{episode_idx}')

@@ -57,6 +57,7 @@ def main(args):
         dec_layers = 7
         nheads = 8
         policy_config = {'lr': args['lr'],
+                         # ATTENTION_HERE
                          'num_queries': args['chunk_size'],
                          'kl_weight': args['kl_weight'],
                          'hidden_dim': args['hidden_dim'],
@@ -101,7 +102,7 @@ def main(args):
             print(f'{ckpt_name}: {success_rate=} {avg_return=}')
         print()
         exit()
-
+    # ATTENTION_HERE 
     train_dataloader, val_dataloader, stats, _ = load_data(dataset_dir, num_episodes, camera_names, batch_size_train, batch_size_val)
 
     # save dataset stats
