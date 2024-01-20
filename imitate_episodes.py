@@ -24,7 +24,23 @@ e = IPython.embed
 
 # python3 imitate_episodes.py --task_name sim_transfer_cube_scripted --ckpt_dir ckpt_dir --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 2000  --lr 1e-5 --seed 0
 # python3 imitate_episodes.py --task_name sim_transfer_cube_scripted --ckpt_dir /media/smj/新加卷1/dataset/ckpt_dir_only_right/ --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 100  --lr 1e-5 --seed 0
-# python3 imitate_episodes.py --task_name sim_transfer_cube_scripted --ckpt_dir /media/smj/新加卷1/dataset/ckpt_dir_7dim/ --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 100  --lr 1e-5 --seed 0 --eval --temporal_agg --onscreen_render
+
+# python3 imitate_episodes.py 
+# --task_name sim_transfer_cube_scripted 
+# --ckpt_dir /media/smj/新加卷1/dataset/ckpt_dir_7dim/ 
+# --policy_class ACT 
+# --kl_weight 10 
+# --chunk_size 100 
+# --hidden_dim 512 
+# --batch_size 8 
+# --dim_feedforward 3200 
+# --num_epochs 100  
+# --lr 1e-5 
+# --seed 0 
+# --eval 
+# --temporal_agg 
+# --onscreen_render
+
 def main(args):
     set_seed(1)
     # command line parameters
@@ -463,5 +479,5 @@ if __name__ == '__main__':
     parser.add_argument('--hidden_dim', action='store', type=int, help='hidden_dim', required=False)
     parser.add_argument('--dim_feedforward', action='store', type=int, help='dim_feedforward', required=False)
     parser.add_argument('--temporal_agg', action='store_true')
-    
+    print("start debug")
     main(vars(parser.parse_args()))
