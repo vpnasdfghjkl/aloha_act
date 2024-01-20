@@ -84,6 +84,8 @@ def visualize_joints(qpos_list, command_list, plot_path=None, ylim=None, label_o
 
     qpos = np.array(qpos_list) # ts, dim
     command = np.array(command_list)
+    print(np.max(qpos),np.min(qpos),qpos.shape)
+    print(np.max(command),np.min(command))
     num_ts, num_dim = qpos.shape
     h, w = 2, num_dim
     num_figs = num_dim
