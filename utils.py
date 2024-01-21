@@ -186,3 +186,44 @@ def detach_dict(d):
 def set_seed(seed):
     torch.manual_seed(seed)
     np.random.seed(seed)
+
+
+### Modify
+def Log(*args):
+    from datetime import datetime    
+    def get_current_time():
+        current_time = datetime.now()
+        formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+        return formatted_time
+    
+    import inspect
+    def current_line_info():
+        stack = inspect.stack()
+        caller_frame = stack[2][0]
+        line_number = caller_frame.f_lineno
+        function_name = caller_frame.f_code.co_name
+        file_name = caller_frame.f_code.co_filename
+        return file_name,function_name,line_number
+    
+    current_dir = os.path.dirname(os.path.abspath(__file__))  
+    log_file_path = os.path.join(current_dir, "Log.txt")  
+    with open(log_file_path, "a") as f:
+        info = ''.join(map(str, args))
+        current_time = get_current_time()
+        file_name,function_name,line_number=current_line_info()
+        str_for_write = "Log content:"+\
+                        "\n===================="+\
+                        "\n"+info+\
+                        "\n===================="+\
+                        "\nFrom:"+\
+                        "\n--------------------------------------"+\
+                        "\nFile:"+file_name+\
+                        "\nFunction:"+function_name+\
+                        "\nLine:"+str(line_number)+\
+                        "\nLog time:"+str(current_time) + \
+                        "\n--------------------------------------"+"\n"
+        
+        print(str_for_write)
+        f.write(str_for_write)
+        f.write("\n")
+
