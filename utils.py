@@ -188,7 +188,7 @@ def set_seed(seed):
     np.random.seed(seed)
 
 
-### Modify
+### MODIFY Add
 def Log(*args):
     from datetime import datetime    
     def get_current_time():

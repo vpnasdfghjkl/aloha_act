@@ -13,7 +13,7 @@ from scripted_policy import PickAndTransferPolicy, InsertionPolicy
 from datetime import datetime
 
 
-
+from utils import Log
 
 import IPython
 e = IPython.embed
@@ -21,27 +21,7 @@ e = IPython.embed
 
 # python3 record_sim_episodes.py --task_name sim_transfer_cube_scripted --dataset_dir data2 --num_episodes 10 --onscreen_render >> a.txt
 # git add . ;git commit -m "Modify record_sim_episodes.py";git push origin main ;
-def Log(*args):
-    def get_current_time():
-        current_time = datetime.now()
-        formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-        return formatted_time
-    import sys
-    def get_cur_info():
-        print(sys._getframe().f_code.co_filename) # 当前文件名，可以通过__file__获得
-        print(sys._getframe().f_code.co_name) # 当前函数名
-        print(sys._getframe().f_lineno) # 当前行号
- 
 
-    current_dir = os.path.dirname(os.path.abspath(__file__))  
-    log_file_path = os.path.join(current_dir, "Log.txt")  
-    with open(log_file_path, "a") as f:
-        info = ''.join(map(str, args))
-        print(info)
-        current_time = get_current_time()
-        str_for_write = "Current_time:" + str(current_time) + "\n" + info
-        f.write(str_for_write)
-        f.write("\n")
 
 def main(args):
     """

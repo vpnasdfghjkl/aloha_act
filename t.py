@@ -30,11 +30,12 @@ dataset_path = '/home/smj/hx/aloha_act/data/sim_transfer_cube_scripted/episode_0
     # print(f"Shape: {action_dataset.shape}")
 
 
-with h5py.File("data/sim_transfer_cube_scripted/episode_0.hdf5", 'r') as root:
-        qpos = root['/observations/qpos'][()]
-        qvel = root['/observations/qvel'][()]
-        action = root['/action'][()]
-        cam_name="top"
-        cam=root[f'/observations/images/{cam_name}'][()]
-        print((qpos.shape))
-        print(cam.shape)
+# with h5py.File("data/sim_transfer_cube_scripted/episode_0.hdf5", 'r') as root:
+#         qpos = root['/observations/qpos'][()]
+#         qvel = root['/observations/qvel'][()]
+#         action = root['/action'][()]
+#         cam_name="top"
+#         cam=root[f'/observations/images/{cam_name}'][()]
+#         print((qpos.shape))
+#         print(cam.shape)
+print(1e-1)

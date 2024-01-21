@@ -13,6 +13,12 @@ from constants import PUPPET_GRIPPER_JOINT_OPEN
 from utils import load_data # data functions
 from utils import sample_box_pose, sample_insertion_pose # robot functions
 from utils import compute_dict_mean, set_seed, detach_dict # helper functions
+
+### MODIFY ADD
+from utils import Log
+from flask import Flask, request, jsonify
+
+### 
 from policy import ACTPolicy, CNNMLPPolicy
 from visualize_episodes import save_videos
 
@@ -40,6 +46,8 @@ e = IPython.embed
 # --eval 
 # --temporal_agg 
 # --onscreen_render
+
+
 
 def main(args):
     set_seed(1)
@@ -199,7 +207,7 @@ def eval_bc(config, ckpt_name, save_episode=True):
 
     ### MODIFY 
     stats['qpos_mean'] = np.concatenate((np.array([0, -0.96, 1.16, 0, -0.3, 0, 0.02239]),stats['qpos_mean']))
-    stats['qpos_std'] = np.concatenate((np.array([0.001, 0.001, 0.001,0.001,0.001,0.001,0.001]),stats['qpos_std']))
+    stats['qpos_std'] = np.concatenate((np.array([1e-2, 1e-2, 1e-2,1e-2,1e-2,1e-2,1e-2]),stats['qpos_std']))
     stats['action_mean'] = np.concatenate((np.array([0, -0.96, 1.16, 0, -0.3, 0, 0.02239]),stats['action_mean'] ))
     stats['action_std'] = np.concatenate((np.zeros(7),stats['action_std'],))
     ### DEL ABOVE
@@ -225,7 +233,7 @@ def eval_bc(config, ckpt_name, save_episode=True):
 
     max_timesteps = int(max_timesteps * 1) # may increase for real-world tasks
 
-    num_rollouts = 50
+    num_rollouts = 2
     episode_returns = []
     highest_rewards = []
     for rollout_id in range(num_rollouts):
@@ -259,6 +267,9 @@ def eval_bc(config, ckpt_name, save_episode=True):
                 ### update onscreen render and wait for DT
                 if onscreen_render:
                     image = env._physics.render(height=480, width=640, camera_id=onscreen_cam)
+                    ### MODIFY
+                    # plt.savefig('rendered_image.png')  
+
                     plt_img.set_data(image)
                     plt.pause(DT)
 
@@ -268,18 +279,30 @@ def eval_bc(config, ckpt_name, save_episode=True):
                     image_list.append(obs['images'])
                 else:
                     image_list.append({'main': obs['image']})
+                    
                 ### MODIFY    
                 qpos_numpy = np.array(obs['qpos'])
+                Log("qpos_numpy:",type(qpos_numpy),qpos_numpy.shape)
                 # qpos_numpy = np.array(obs['qpos'])[0:7]
-                print("qpos_numpy##",qpos_numpy)
 
-                
+                ### MODIFY
+                Log(ts.observation['images'].keys())
+                Log(ts.observation['images']["top"])
+                Log(type(ts.observation['images']["angle"]))
+                Log(ts.observation['images']["vis"].shape)
+   
+                 
+
                 qpos = pre_process(qpos_numpy)
 
                 qpos = torch.from_numpy(qpos).float().cuda().unsqueeze(0)
                 
                 qpos_history[:, t] = qpos
+
+                ### TO MODIFY FOR 801
                 curr_image = get_image(ts, camera_names)
+                # curr_image = get_image(cam_followed,cam_fixed)
+                Log("curr_image:",curr_image.shape)
 
                 ### query policy
                 if config['policy_class'] == "ACT":

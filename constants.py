@@ -9,7 +9,7 @@ SIM_TASK_CONFIGS = {
         'dataset_dir': DATA_DIR + '/sim_transfer_cube_scripted',
         'num_episodes': 5,
         'episode_len': 400,
-        'camera_names': ['top']
+        'camera_names': ['top','angle','vis']
     },
 
     'sim_transfer_cube_human':{
