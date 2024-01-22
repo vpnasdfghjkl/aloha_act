@@ -5,6 +5,20 @@ import requests
 import numpy as np
 
 def capture_and_send_data():
+    '''        
+    # ## 801数据收集
+    # ### joints:
+    # <class 'numpy.ndarray'> (14,)
+
+    # ### cam_followed:
+    # <class 'numpy.ndarray'> (480, 640, 3)
+
+    # ### cam_fixed:
+    # <class 'numpy.ndarray'> (480, 640, 3)
+  
+    # ### pid?:
+    # <class ?> (?,)
+    '''
     cnt = 4
     while cnt > 0:
         cnt -= 1
