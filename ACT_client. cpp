@@ -1,0 +1,82 @@
+#include <iostream>
+#include <opencv2/opencv.hpp>
+#include <nlohmann/json.hpp>
+#include "httplib.h"
+
+using namespace cv;
+using json = nlohmann::json;
+
+
+'''        
+# ## 801数据收集
+# ### joints:
+# <class 'numpy.ndarray'> (14,)
+
+# ### cam_followed:
+# <class 'numpy.ndarray'> (480, 640, 3)
+
+# ### cam_fixed:
+# <class 'numpy.ndarray'> (480, 640, 3)
+  
+# ### pid?:
+# <class ?> (?,)
+'''
+void captureAndSendData() {
+    int cnt = 4;
+    while (cnt > 0) {
+        cnt--;
+
+        // Assuming you have OpenCV properly configured in your C++ project
+        std::string image_path = "cam/image_0.png";
+        Mat image = imread(image_path, IMREAD_COLOR);
+        Mat cam_followed = image.clone();
+        Mat cam_fixed = image.clone();
+        std::vector<double> pose_info = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
+
+        // Convert Mats to vectors
+        std::vector<std::vector<std::vector<int>>> cam_followed_vec(cam_followed.rows, std::vector<std::vector<int>>(cam_followed.cols, std::vector<int>(cam_followed.channels())));
+        std::vector<std::vector<std::vector<int>>> cam_fixed_vec(cam_fixed.rows, std::vector<std::vector<int>>(cam_fixed.cols, std::vector<int>(cam_fixed.channels())));
+
+        for (int i = 0; i < cam_followed.rows; ++i) {
+            for (int j = 0; j < cam_followed.cols; ++j) {
+                for (int k = 0; k < cam_followed.channels(); ++k) {
+                    cam_followed_vec[i][j][k] = cam_followed.at<Vec3b>(i, j)[k];
+                    cam_fixed_vec[i][j][k] = cam_fixed.at<Vec3b>(i, j)[k];
+                }
+            }
+        }
+
+        // Construct JSON data
+        json data = {
+            {"cam_followed", cam_followed_vec},
+            {"cam_fixed", cam_fixed_vec},
+            {"pose", pose_info}
+        };
+
+        httplib::Client client("http://localhost:7777");
+
+        // Send HTTP POST request
+        auto response = client.Post("/process_data", data.dump(), "application/json");
+        if (response && response->status == 200) {
+            try {
+                json response_data = json::parse(response->body);
+                std::vector<double> target_joints = response_data.get<std::vector<double>>();
+
+                // Print the rounded target joints
+                for (double num : target_joints) {
+                    std::cout << round(num, 3) << " ";
+                }
+                std::cout << std::endl;
+            } catch (const json::parse_error& e) {
+                std::cout << "Failed to parse JSON response: " << e.what() << std::endl;
+            }
+        } else {
+            std::cout << "Request failed with status code: " << (response ? response->status : -1) << std::endl;
+        }
+    }
+}
+
+int main() {
+    captureAndSendData();
+    return 0;
+}
