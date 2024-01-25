@@ -3,7 +3,7 @@ import json
 import base64
 import requests
 import numpy as np
-
+url = 'http://localhost:7777/process_data'
 def capture_and_send_data():
     '''        
     # ## 801数据收集
@@ -19,7 +19,8 @@ def capture_and_send_data():
     # ### pid?:
     # <class ?> (?,)
     '''
-    cnt = 4
+
+    cnt = 1
     while cnt > 0:
         cnt -= 1
         image_path = 'cam/image_0.png'
@@ -35,6 +36,8 @@ def capture_and_send_data():
         }
 
         response = requests.post('http://localhost:7777/process_data', json=data)
+        time =requests.get(url=url).elapsed.total_seconds()
+        print(time)
 
         # Check if the request was successful (status code 200)
         if response.status_code == 200:
